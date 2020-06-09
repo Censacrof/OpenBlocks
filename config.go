@@ -1,7 +1,6 @@
 package openblocks
 
-import "fmt"
-
-func Config() {
-	fmt.Println("openblocks config")
+// Config it's just a test function
+func Config() string {
+	return "openblocks config"
 }
