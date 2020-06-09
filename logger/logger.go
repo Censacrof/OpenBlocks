@@ -42,7 +42,6 @@ func Global() *Logger {
 	// fmt.Println(globalInitialized)
 	if atomic.CompareAndSwapInt32(&globalInitialized, 0, 1) {
 		globalLogger = New(INFO)
-		fmt.Println("Global logger initialized")
 	}
 	// fmt.Println(globalInitialized)
 
