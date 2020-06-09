@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/Censacrof/openblocks/logger"
+)
 
 func main() {
-	fmt.Println("Hello World!")
+	logger.Global().SetLevel(logger.DEBUG)
+	fmt.Println(logger.Global().GetLevel())
+
+	logger.Global().Info("Hello World!")
 }
