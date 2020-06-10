@@ -26,8 +26,8 @@ type Logger struct {
 	mutex    *sync.Mutex
 }
 
-// New creates a new Logger with given level
-func New(lvl Level) *Logger {
+// NewLogger creates a new Logger with given level
+func NewLogger(lvl Level) *Logger {
 	return &Logger{
 		logLevel: INFO,
 		mutex:    &sync.Mutex{},
@@ -41,7 +41,7 @@ var globalLogger *Logger
 func Global() *Logger {
 	// fmt.Println(globalInitialized)
 	if atomic.CompareAndSwapInt32(&globalInitialized, 0, 1) {
-		globalLogger = New(INFO)
+		globalLogger = NewLogger(INFO)
 	}
 	// fmt.Println(globalInitialized)
 
