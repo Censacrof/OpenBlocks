@@ -3,19 +3,25 @@ package main
 import (
 	"net/http"
 
-	"github.com/Censacrof/openblocks/internal/templatemanager"
 	"github.com/Censacrof/openblocks/logger"
+	"github.com/Censacrof/openblocks/templatewatcher"
 )
 
+var tw *templatewatcher.TemplateWatcher
+
 func rootHandler(resp http.ResponseWriter, req *http.Request) {
-	templatemanager.MasterTemplate.ExecuteTemplate(resp, "layout.html", nil)
+	tmplt := tw.GetTemplate()
+
+	tmplt.ExecuteTemplate(resp, "layout.html", nil)
 }
 
 func main() {
 	logger.Global().SetLevel(logger.DEBUG)
 	logger.Global().Info("Initializing")
 
-	templatemanager.LoadTemplatesAndWatch("./www/templates", ".html")
+	tw = templatewatcher.NewTemplateWatcher("root", []string{"./www/templates"})
+	// tmplt, _ := tw.GetTemplate()
+	// fmt.Println(tmplt.DefinedTemplates())
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./www/static"))))
 	http.HandleFunc("/", rootHandler)
