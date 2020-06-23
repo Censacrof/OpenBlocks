@@ -94,6 +94,7 @@ func (tw *TemplateWatcher) GetTemplate() *template.Template {
 
 // Reload reloads all template files
 func (tw *TemplateWatcher) Reload() {
+	tw.tmplt = template.New(tw.tmpltName)
 	for _, dirPath := range tw.templateFolders {
 		info, err := os.Stat(dirPath)
 		if err != nil {
@@ -112,7 +113,6 @@ func (tw *TemplateWatcher) Reload() {
 			continue
 		}
 
-		tw.tmplt = template.New(tw.tmpltName)
 		for _, f := range files {
 			if f.IsDir() {
 				continue
