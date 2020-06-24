@@ -76,13 +76,18 @@ function setup() {
 }
 
 function newBlock(_isSolid, _isStatic, _color) { return {isSolid: _isSolid, isStatic: _isStatic, color: _color} }
+function newFallingPiece(blocks, color) {
+	let startingPos = createVector(0, 0)
+	return {blocks: blocks.map(i => p5.Vector.add(i, startingPos)), color: color} 
+}
 
 let PREV_STATE = "begin"
 let CURR_STATE = "begin"
 let NEXT_STATE = "begin"
 
 let lastFallUpdate = 0
-let fallCooldown = 1000
+let fallCooldown = 10
+let fallingPiece = null
 function update() {
 	PREV_STATE = CURR_STATE
 	CURR_STATE = NEXT_STATE
@@ -98,11 +103,7 @@ function update() {
 
 		case "newPiece": {
 			let p = PIECES[Math.floor(Math.random() * PIECES.length)]
-
-			for (let i = 0; i < p.blocks.length; i++) {
-				let b = p.blocks[i]
-				board[b.y][b.x] = newBlock(true, false, p.color)
-			}
+			fallingPiece = newFallingPiece(p.blocks, p.color)
 
 			NEXT_STATE = "fallPiece"
 			break
@@ -112,7 +113,35 @@ function update() {
 			if (millis() - lastFallUpdate > fallCooldown) {
 				lastFallUpdate = millis()
 
-				// TODO
+				// check if piece is able to move down
+				let canFall = true
+				for (let i = 0; i < fallingPiece.blocks.length; i++) {
+					let b = fallingPiece.blocks[i]
+
+					if (b.y + 1 >= BOARD_NY) {
+						canFall = false
+						break
+					}
+
+
+					let cellUnder = board[b.y + 1][b.x]
+					if (cellUnder.isSolid && cellUnder.isStatic) {
+						canFall = false
+						break
+					}
+				}
+
+				if (canFall) {
+					fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, 1)))
+				}
+				else {
+					for (let i = 0; i < fallingPiece.blocks.length; i++) {
+						let b = fallingPiece.blocks[i]
+						board[b.y][b.x] = newBlock(true, true, fallingPiece.color)
+					}
+
+					NEXT_STATE = "newPiece"
+				}
 			}
 			break
 		}
@@ -149,4 +178,14 @@ function drawBoard() {
 			rect(BOARD_POS_X + x * TILE_SIZE, BOARD_POS_Y + y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
 		}
 	}
+
+	// draw falling piece
+	if (fallingPiece) {
+		stroke(fallingPiece.color)
+		fill(fallingPiece.color)
+		for (let i = 0; i < fallingPiece.blocks.length; i++) {
+			let b = fallingPiece.blocks[i]
+			rect(BOARD_POS_X + b.x * TILE_SIZE, BOARD_POS_Y + b.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)	
+		}
+	}	
 }
