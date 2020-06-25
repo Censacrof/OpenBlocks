@@ -17,26 +17,31 @@ function setup() {
 	background(0);
 
 	let vec = createVector // alias
+
+	// SRS - https://tetris.fandom.com/wiki/SRS
 	PIECES = [
 		{
 			// I
 			// ....
 			// XXXX
 			blocks: [vec(0, 1), vec(1, 1), vec(2, 1), vec(3, 1)],
-			color: color(255, 0, 0)
+			origin: vec(2, 1.5),
+			color: color(255, 0, 0),
 		},
 		{
 			// J
 			// X...
 			// XXX.
 			blocks: [vec(0, 0), vec(0, 1), vec(1, 1), vec(2, 1)],
+			origin: vec(1.5, 1.5),
 			color: color(255, 165, 0)
 		},
 		{
 			// L
+			// ..X.
 			// XXX.
-			// X...
-			blocks: [vec(0, 1), vec(0, 0), vec(1, 0), vec(2, 0),],
+			blocks: [vec(0, 1), vec(1, 1), vec(2, 1), vec(2, 0),],
+			origin: vec(1.5, 1.5),
 			color: color(255, 0, 255)
 		},
 		{
@@ -44,6 +49,7 @@ function setup() {
 			// XX..
 			// XX..
 			blocks: [vec(0, 0), vec(0, 1), vec(1, 1), vec(1, 0)],
+			origin: vec(1, 1),
 			color: color(0, 0, 255)
 		},
 		{
@@ -51,13 +57,15 @@ function setup() {
 			// .XX.
 			// XX..
 			blocks: [vec(0, 1), vec(1, 1), vec(1, 0), vec(2, 0)],
+			origin: vec(1.5, 1.5),
 			color: color(204, 255, 0)
 		},
 		{
 			// T
-			// XXX.
 			// .X..
-			blocks: [vec(0, 0), vec(1, 0), vec(2, 0), vec(1, 1)],
+			// XXX.
+			blocks: [vec(0, 1), vec(1, 1), vec(2, 1), vec(1, 0)],
+			origin: vec(1.5, 1.5),
 			color: color(128, 128, 0)
 		},
 		{
@@ -65,6 +73,7 @@ function setup() {
 			// XX..
 			// .XX.
 			blocks: [vec(0, 0), vec(1, 0), vec(1, 1), vec(2, 1)],
+			origin: vec(1.5, 1.5),
 			color: color(0, 255, 255)
 		},
 	]
@@ -76,9 +85,9 @@ function setup() {
 }
 
 function newBlock(_isSolid, _isStatic, _color) { return {isSolid: _isSolid, isStatic: _isStatic, color: _color} }
-function newFallingPiece(blocks, color) {
+function newFallingPiece(blocks, origin, color) {
 	let startingPos = createVector(0, 0)
-	return {blocks: blocks.map(i => p5.Vector.add(i, startingPos)), color: color} 
+	return {blocks: blocks.map(i => p5.Vector.add(i, startingPos)), origin: origin, color: color} 
 }
 
 let PREV_STATE = "begin"
@@ -90,36 +99,12 @@ let fallingPiece = null
 let actionStrafeLeft = false
 let actionStrafeRight = false
 
-window.onkeydown = function(e) {
-	if (e.keyCode == LEFT_ARROW) {
-		actionStrafeLeft = true
-		return
-	}
-		
-	if (e.keyCode == RIGHT_ARROW) {
-		actionStrafeRight = true
-		return
-	}
-}
-
-window.onkeyup = function(e) {
-	if (e.keyCode == LEFT_ARROW) {
-		actionStrafeLeft = false
-		return
-	}
-		
-	if (e.keyCode == RIGHT_ARROW) {
-		actionStrafeRight = false
-		return
-	}
-}
-
 let strafeTimerDuration = 50
 let strafeTimerExpired = true
 function controlPiece() {
 	let dx = 0;
-	dx += actionStrafeLeft ? -1 : 0
-	dx += actionStrafeRight ? 1 : 0
+	dx += keyIsDown(LEFT_ARROW) ? -1 : 0
+	dx += keyIsDown(RIGHT_ARROW) ? 1 : 0
 
 	if (strafeTimerExpired) {
 		strafeTimerExpired = false
@@ -143,6 +128,7 @@ function controlPiece() {
 	
 			if (canStrafe) {
 				fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(dx, 0)))
+				fallingPiece.origin.add(createVector(dx, 0))
 			}
 		}
 	}	
@@ -170,7 +156,7 @@ function update() {
 
 		case "newPiece": {
 			let p = PIECES[Math.floor(Math.random() * PIECES.length)]
-			fallingPiece = newFallingPiece(p.blocks, p.color)
+			fallingPiece = newFallingPiece(p.blocks, p.origin.copy(), p.color)
 
 			startFallTimer()
 			NEXT_STATE = "fallPiece"
@@ -203,6 +189,7 @@ function update() {
 
 			if (canFall) {
 				fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, 1)))
+				fallingPiece.origin.add(createVector(0, 1))
 			}
 			else {
 				for (let i = 0; i < fallingPiece.blocks.length; i++) {
@@ -257,5 +244,10 @@ function drawBoard() {
 			let b = fallingPiece.blocks[i]
 			rect(BOARD_POS_X + b.x * TILE_SIZE, BOARD_POS_Y + b.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)	
 		}
+
+		stroke(255, 255, 255)
+		fill(255, 255, 255)
+		ellipseMode(CENTER)
+		ellipse(BOARD_POS_X + fallingPiece.origin.x * TILE_SIZE, BOARD_POS_Y + fallingPiece.origin.y * TILE_SIZE, 10, 10)
 	}	
 }
