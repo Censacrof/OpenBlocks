@@ -87,7 +87,70 @@ let NEXT_STATE = "begin"
 
 let fallingPiece = null
 
-let STARTING_FALL_TIMER = 500
+let actionStrafeLeft = false
+let actionStrafeRight = false
+
+window.onkeydown = function(e) {
+	console.log("asd")
+
+	if (e.keyCode == LEFT_ARROW) {
+		actionStrafeLeft = true
+		return
+	}
+		
+	if (e.keyCode == RIGHT_ARROW) {
+		actionStrafeRight = true
+		return
+	}
+}
+
+window.onkeyup = function(e) {
+	if (e.keyCode == LEFT_ARROW) {
+		actionStrafeLeft = false
+		return
+	}
+		
+	if (e.keyCode == RIGHT_ARROW) {
+		actionStrafeRight = false
+		return
+	}
+}
+
+let strafeTimerDuration = 50
+let strafeTimerExpired = true
+function controlPiece() {
+	let dx = 0;
+	dx += actionStrafeLeft ? -1 : 0
+	dx += actionStrafeRight ? 1 : 0
+
+	if (strafeTimerExpired) {
+		strafeTimerExpired = false
+		setTimeout(function() { strafeTimerExpired = true }, strafeTimerDuration)
+
+		if (dx != 0) {
+			let canStrafe = true
+			for (let i = 0; i < fallingPiece.blocks.length; i++) {
+				let b = fallingPiece.blocks[i]
+				
+				if (b.x + dx < 0 || b.x + dx >= BOARD_NX) {
+					canStrafe = false
+					break
+				}
+	
+				if (board[b.y][b.x + dx].isSolid) {
+					canStrafe = false
+					break
+				}
+			}
+	
+			if (canStrafe) {
+				fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(dx, 0)))
+			}
+		}
+	}	
+}
+
+let STARTING_FALL_TIMER = 250
 let fallTimerDuration = STARTING_FALL_TIMER 
 let fallTimerExpired = false
 function startFallTimer() {
@@ -117,11 +180,11 @@ function update() {
 		}
 
 		case "fallPiece": {
-			if (!fallTimerExpired) {
+			controlPiece()
+
+			if (!fallTimerExpired)
 				break
-			}
-			let timer_hndl = startFallTimer()
-						
+			let timer_hndl = startFallTimer()						
 
 			// check if piece is able to move down
 			let canFall = true
@@ -182,7 +245,7 @@ function drawBoard() {
 			if (!p.isSolid)
 				continue
 			
-			stroke(p.color)
+			stroke(255)
 			fill(p.color)
 			rect(BOARD_POS_X + x * TILE_SIZE, BOARD_POS_Y + y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
 		}
