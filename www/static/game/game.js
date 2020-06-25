@@ -91,8 +91,6 @@ let actionStrafeLeft = false
 let actionStrafeRight = false
 
 window.onkeydown = function(e) {
-	console.log("asd")
-
 	if (e.keyCode == LEFT_ARROW) {
 		actionStrafeLeft = true
 		return
