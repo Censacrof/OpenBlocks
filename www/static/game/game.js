@@ -25,7 +25,7 @@ function setup() {
 			// ....
 			// XXXX
 			blocks: [vec(0, 1), vec(1, 1), vec(2, 1), vec(3, 1)],
-			origin: vec(2, 1.5),
+			origin: vec(1.5, 1),
 			color: color(255, 0, 0),
 		},
 		{
@@ -33,7 +33,7 @@ function setup() {
 			// X...
 			// XXX.
 			blocks: [vec(0, 0), vec(0, 1), vec(1, 1), vec(2, 1)],
-			origin: vec(1.5, 1.5),
+			origin: vec(1, 1),
 			color: color(255, 165, 0)
 		},
 		{
@@ -41,7 +41,7 @@ function setup() {
 			// ..X.
 			// XXX.
 			blocks: [vec(0, 1), vec(1, 1), vec(2, 1), vec(2, 0),],
-			origin: vec(1.5, 1.5),
+			origin: vec(1, 1),
 			color: color(255, 0, 255)
 		},
 		{
@@ -49,7 +49,7 @@ function setup() {
 			// XX..
 			// XX..
 			blocks: [vec(0, 0), vec(0, 1), vec(1, 1), vec(1, 0)],
-			origin: vec(1, 1),
+			origin: vec(0.5, 0.5),
 			color: color(0, 0, 255)
 		},
 		{
@@ -57,7 +57,7 @@ function setup() {
 			// .XX.
 			// XX..
 			blocks: [vec(0, 1), vec(1, 1), vec(1, 0), vec(2, 0)],
-			origin: vec(1.5, 1.5),
+			origin: vec(1, 1),
 			color: color(204, 255, 0)
 		},
 		{
@@ -65,7 +65,7 @@ function setup() {
 			// .X..
 			// XXX.
 			blocks: [vec(0, 1), vec(1, 1), vec(2, 1), vec(1, 0)],
-			origin: vec(1.5, 1.5),
+			origin: vec(1, 1),
 			color: color(128, 128, 0)
 		},
 		{
@@ -73,7 +73,7 @@ function setup() {
 			// XX..
 			// .XX.
 			blocks: [vec(0, 0), vec(1, 0), vec(1, 1), vec(2, 1)],
-			origin: vec(1.5, 1.5),
+			origin: vec(1, 1),
 			color: color(0, 255, 255)
 		},
 	]
@@ -96,19 +96,25 @@ let NEXT_STATE = "begin"
 
 let fallingPiece = null
 
+function rotateBlock(pos, origin, dr) {
+	let res = p5.Vector.sub(pos, origin)
+	res = createVector(dr * res.y, -dr * res.x)
+	return p5.Vector.add(res, origin)
+}
+
 let actionStrafeLeft = false
 let actionStrafeRight = false
 
-let strafeTimerDuration = 50
-let strafeTimerExpired = true
+let moveTimerDuration = 100
+let moveTimerExpired = true
 function controlPiece() {
 	let dx = 0;
 	dx += keyIsDown(LEFT_ARROW) ? -1 : 0
 	dx += keyIsDown(RIGHT_ARROW) ? 1 : 0
 
-	if (strafeTimerExpired) {
-		strafeTimerExpired = false
-		setTimeout(function() { strafeTimerExpired = true }, strafeTimerDuration)
+	if (moveTimerExpired && dx != 0) {
+		moveTimerExpired = false
+		setTimeout(function() { moveTimerExpired = true }, moveTimerDuration)
 
 		if (dx != 0) {
 			let canStrafe = true
@@ -131,7 +137,20 @@ function controlPiece() {
 				fallingPiece.origin.add(createVector(dx, 0))
 			}
 		}
-	}	
+	}
+
+	let dr = 0;
+	dr += keyIsDown(65) ? 1 : 0  // A -> rotate counterclockwise
+	dr += keyIsDown(68) ? -1 : 0 // D -> rotate clockwise
+
+	if (moveTimerExpired && dr != 0) {
+		moveTimerExpired = false
+		setTimeout(function() { moveTimerExpired = true }, moveTimerDuration)
+
+		for (let i = 0; i < fallingPiece.blocks.length; i++) {
+			fallingPiece.blocks[i] = rotateBlock(fallingPiece.blocks[i].copy(), fallingPiece.origin, dr)
+		}
+	}
 }
 
 let STARTING_FALL_TIMER = 250
@@ -247,7 +266,6 @@ function drawBoard() {
 
 		stroke(255, 255, 255)
 		fill(255, 255, 255)
-		ellipseMode(CENTER)
-		ellipse(BOARD_POS_X + fallingPiece.origin.x * TILE_SIZE, BOARD_POS_Y + fallingPiece.origin.y * TILE_SIZE, 10, 10)
+		rect(BOARD_POS_X + fallingPiece.origin.x * TILE_SIZE, BOARD_POS_Y + fallingPiece.origin.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
 	}	
 }
