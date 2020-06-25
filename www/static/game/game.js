@@ -8,6 +8,52 @@ let TILE_SIZE = 24
 let BOARD_SIZE_X = TILE_SIZE * BOARD_NX
 let BOARD_SIZE_Y = TILE_SIZE * BOARD_NY
 
+// SRS Kick test sequence - https://tetris.fandom.com/wiki/SRS
+let KICK_SEQUENCE_JLSTZ = [
+	[[], [], [], [],],
+	[[], [], [], [],],
+	[[], [], [], [],],
+	[[], [], [], [],],
+]
+
+let KICK_SEQUENCE_I = [
+	[[], [], [], [],],
+	[[], [], [], [],],
+	[[], [], [], [],],
+	[[], [], [], [],],
+]
+
+function initKickSequences() {
+	let vec = createVector
+	
+	// JLSTZ
+	KICK_SEQUENCE_JLSTZ[0][1] = [vec(0, -0), vec(-1, -0), vec(-1, -1), vec(0, 2), vec(-1, 2),]
+	KICK_SEQUENCE_JLSTZ[1][0] = [vec(0, -0), vec(1, -0), vec(1, 1), vec(0, -2), vec(1, -2),]
+
+	KICK_SEQUENCE_JLSTZ[1][2] = [vec(0, -0), vec(1, -0), vec(1, 1), vec(0, -2), vec(1, -2),]
+	KICK_SEQUENCE_JLSTZ[2][1] = [vec(0, -0), vec(-1, -0), vec(-1, -1), vec(0, 2), vec(-1, 2),]
+
+	KICK_SEQUENCE_JLSTZ[2][3] = [vec(0, -0), vec(1, -0), vec(1, -1), vec(0, 2), vec(1, 2),]
+	KICK_SEQUENCE_JLSTZ[3][2] = [vec(0, -0), vec(-1, -0), vec(-1, 1), vec(0, -2), vec(-1, -2),]
+
+	KICK_SEQUENCE_JLSTZ[3][0] = [vec(0, -0), vec(-1, -0), vec(-1, 1), vec(0, -2), vec(-1, -2),]
+	KICK_SEQUENCE_JLSTZ[0][3] = [vec(0, -0), vec(1, -0), vec(1, -1), vec(0, 2), vec(1, 2),]
+
+	// I
+	KICK_SEQUENCE_I[0][1] = [vec(0, -0), vec(-2, -0), vec(1, -0), vec(-2, 1), vec(1, -2),]
+	KICK_SEQUENCE_I[1][0] = [vec(0, -0), vec(2, -0), vec(-1, -0), vec(2, -1), vec(-1, 2),]
+
+	KICK_SEQUENCE_I[1][2] = [vec(0, -0), vec(-1, -0), vec(2, -0), vec(-1, -2), vec(2, 1),]
+	KICK_SEQUENCE_I[2][1] = [vec(0, -0), vec(1, -0), vec(-2, -0), vec(1, 2), vec(-2, -1),]
+
+	KICK_SEQUENCE_I[2][3] = [vec(0, -0), vec(2, -0), vec(-1, -0), vec(2, -1), vec(-1, 2),]
+	KICK_SEQUENCE_I[3][2] = [vec(0, -0), vec(-2, -0), vec(1, -0), vec(-2, 1), vec(1, -2),]
+
+	KICK_SEQUENCE_I[3][0] = [vec(0, -0), vec(1, -0), vec(-2, -0), vec(1, 2), vec(-2, -1),]
+	KICK_SEQUENCE_I[0][3] = [vec(0, -0), vec(-1, -0), vec(2, -0), vec(-1, -2), vec(2, 1),]
+}
+
+
 let PIECES
 let board
 function setup() {
@@ -24,6 +70,7 @@ function setup() {
 			// I
 			// ....
 			// XXXX
+			type: "I",
 			blocks: [vec(0, 1), vec(1, 1), vec(2, 1), vec(3, 1)],
 			origin: vec(1.5, 1.5),
 			color: color(255, 0, 0),
@@ -32,6 +79,7 @@ function setup() {
 			// J
 			// X...
 			// XXX.
+			type: "J",
 			blocks: [vec(0, 0), vec(0, 1), vec(1, 1), vec(2, 1)],
 			origin: vec(1, 1),
 			color: color(255, 165, 0)
@@ -40,6 +88,7 @@ function setup() {
 			// L
 			// ..X.
 			// XXX.
+			type: "L",
 			blocks: [vec(0, 1), vec(1, 1), vec(2, 1), vec(2, 0),],
 			origin: vec(1, 1),
 			color: color(255, 0, 255)
@@ -48,6 +97,7 @@ function setup() {
 			// O
 			// .XX.
 			// .XX.
+			type: "O",
 			blocks: [vec(1, 0), vec(1, 1), vec(2, 1), vec(2, 0)],
 			origin: vec(1.5, 0.5),
 			color: color(0, 0, 255)
@@ -56,6 +106,7 @@ function setup() {
 			// S
 			// .XX.
 			// XX..
+			type: "S",
 			blocks: [vec(0, 1), vec(1, 1), vec(1, 0), vec(2, 0)],
 			origin: vec(1, 1),
 			color: color(204, 255, 0)
@@ -64,6 +115,7 @@ function setup() {
 			// T
 			// .X..
 			// XXX.
+			type: "T",
 			blocks: [vec(0, 1), vec(1, 1), vec(2, 1), vec(1, 0)],
 			origin: vec(1, 1),
 			color: color(128, 128, 0)
@@ -72,11 +124,14 @@ function setup() {
 			// Z
 			// XX..
 			// .XX.
+			type: "Z",
 			blocks: [vec(0, 0), vec(1, 0), vec(1, 1), vec(2, 1)],
 			origin: vec(1, 1),
 			color: color(0, 255, 255)
 		},
 	]
+
+	initKickSequences()
 
 	board = Array(BOARD_SIZE_Y)
 	for (let i = 0; i < BOARD_SIZE_Y; i++) {
@@ -85,9 +140,9 @@ function setup() {
 }
 
 function newBlock(_isSolid, _isStatic, _color) { return {isSolid: _isSolid, isStatic: _isStatic, color: _color} }
-function newFallingPiece(blocks, origin, color) {
+function newFallingPiece(type, blocks, origin, color) {
 	let offset = createVector(3, 0)
-	return {blocks: blocks.map(i => p5.Vector.add(i, offset)), origin: p5.Vector.add(origin, offset), color: color} 
+	return {type: type, blocks: blocks.map(i => p5.Vector.add(i, offset)), origin: p5.Vector.add(origin, offset), rotationState: 0, color: color} 
 }
 
 let PREV_STATE = "begin"
@@ -147,8 +202,41 @@ function controlPiece() {
 		rotateTimerExpired = false
 		setTimeout(function() { rotateTimerExpired = true }, rotateTimerDuration)
 
+		newBlocks = Array(fallingPiece.blocks.length)
 		for (let i = 0; i < fallingPiece.blocks.length; i++) {
-			fallingPiece.blocks[i] = rotateBlock(fallingPiece.blocks[i].copy(), fallingPiece.origin, dr)
+			newBlocks[i] = rotateBlock(fallingPiece.blocks[i].copy(), fallingPiece.origin, dr)
+		}
+
+		let targetRotationState = (4 + fallingPiece.rotationState - dr) % 4
+
+		// kicks
+		let kickSeq = (fallingPiece.type == "I" ? KICK_SEQUENCE_I : KICK_SEQUENCE_JLSTZ)[fallingPiece.rotationState][targetRotationState]
+		
+		for (let i = 0; i < kickSeq.length; i++) {
+			let kick = kickSeq[i]
+
+			let canRotate = true
+			for (let j = 0; j < newBlocks.length; j++) {
+				let b = p5.Vector.add(newBlocks[j], kick)
+
+				if (b.x < 0 || b.x >= BOARD_NX || b.y < 0 || b.y >= BOARD_NY) {
+					canRotate = false
+					break
+				}
+
+				if (board[b.y][b.x].isSolid) {
+					canRotate = false
+					break
+				}
+			}
+
+			if (!canRotate)
+				continue
+
+			fallingPiece.blocks = newBlocks.map(nb => p5.Vector.add(nb, kick))
+			fallingPiece.origin.add(kick)
+			fallingPiece.rotationState = targetRotationState
+			break
 		}
 	}
 }
@@ -175,7 +263,7 @@ function update() {
 
 		case "newPiece": {
 			let p = PIECES[Math.floor(Math.random() * PIECES.length)]
-			fallingPiece = newFallingPiece(p.blocks, p.origin.copy(), p.color)
+			fallingPiece = newFallingPiece(p.type, p.blocks, p.origin.copy(), p.color)
 
 			startFallTimer()
 			NEXT_STATE = "fallPiece"
@@ -264,8 +352,8 @@ function drawBoard() {
 			rect(BOARD_POS_X + b.x * TILE_SIZE, BOARD_POS_Y + b.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)	
 		}
 
-		stroke(255, 255, 255)
-		fill(255, 255, 255)
-		rect(BOARD_POS_X + fallingPiece.origin.x * TILE_SIZE, BOARD_POS_Y + fallingPiece.origin.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+		// stroke(255, 255, 255)
+		// fill(255, 255, 255)
+		// rect(BOARD_POS_X + fallingPiece.origin.x * TILE_SIZE, BOARD_POS_Y + fallingPiece.origin.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
 	}	
 }
