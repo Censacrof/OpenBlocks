@@ -25,7 +25,7 @@ function setup() {
 			// ....
 			// XXXX
 			blocks: [vec(0, 1), vec(1, 1), vec(2, 1), vec(3, 1)],
-			origin: vec(1.5, 1),
+			origin: vec(1.5, 1.5),
 			color: color(255, 0, 0),
 		},
 		{
@@ -102,19 +102,19 @@ function rotateBlock(pos, origin, dr) {
 	return p5.Vector.add(res, origin)
 }
 
-let actionStrafeLeft = false
-let actionStrafeRight = false
+let strafeTimerDuration = 50
+let strafeTimerExpired = true
 
-let moveTimerDuration = 100
-let moveTimerExpired = true
+let rotateTimerDuration = 150
+let rotateTimerExpired = true
 function controlPiece() {
 	let dx = 0;
 	dx += keyIsDown(LEFT_ARROW) ? -1 : 0
 	dx += keyIsDown(RIGHT_ARROW) ? 1 : 0
 
-	if (moveTimerExpired && dx != 0) {
-		moveTimerExpired = false
-		setTimeout(function() { moveTimerExpired = true }, moveTimerDuration)
+	if (strafeTimerExpired && dx != 0) {
+		strafeTimerExpired = false
+		setTimeout(function() { strafeTimerExpired = true }, strafeTimerDuration)
 
 		if (dx != 0) {
 			let canStrafe = true
@@ -143,9 +143,9 @@ function controlPiece() {
 	dr += keyIsDown(65) ? 1 : 0  // A -> rotate counterclockwise
 	dr += keyIsDown(68) ? -1 : 0 // D -> rotate clockwise
 
-	if (moveTimerExpired && dr != 0) {
-		moveTimerExpired = false
-		setTimeout(function() { moveTimerExpired = true }, moveTimerDuration)
+	if (rotateTimerExpired && dr != 0) {
+		rotateTimerExpired = false
+		setTimeout(function() { rotateTimerExpired = true }, rotateTimerDuration)
 
 		for (let i = 0; i < fallingPiece.blocks.length; i++) {
 			fallingPiece.blocks[i] = rotateBlock(fallingPiece.blocks[i].copy(), fallingPiece.origin, dr)
@@ -207,8 +207,8 @@ function update() {
 			}
 
 			if (canFall) {
-				fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, 1)))
-				fallingPiece.origin.add(createVector(0, 1))
+				// fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, 1)))
+				// fallingPiece.origin.add(createVector(0, 1))
 			}
 			else {
 				for (let i = 0; i < fallingPiece.blocks.length; i++) {
