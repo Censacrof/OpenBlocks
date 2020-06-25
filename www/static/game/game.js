@@ -86,8 +86,8 @@ function setup() {
 
 function newBlock(_isSolid, _isStatic, _color) { return {isSolid: _isSolid, isStatic: _isStatic, color: _color} }
 function newFallingPiece(blocks, origin, color) {
-	let startingPos = createVector(0, 0)
-	return {blocks: blocks.map(i => p5.Vector.add(i, startingPos)), origin: origin, color: color} 
+	let offset = createVector(3, 0)
+	return {blocks: blocks.map(i => p5.Vector.add(i, offset)), origin: p5.Vector.add(origin, offset), color: color} 
 }
 
 let PREV_STATE = "begin"
@@ -207,8 +207,8 @@ function update() {
 			}
 
 			if (canFall) {
-				// fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, 1)))
-				// fallingPiece.origin.add(createVector(0, 1))
+				fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, 1)))
+				fallingPiece.origin.add(createVector(0, 1))
 			}
 			else {
 				for (let i = 0; i < fallingPiece.blocks.length; i++) {
