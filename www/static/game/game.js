@@ -46,10 +46,10 @@ function setup() {
 		},
 		{
 			// O
-			// XX..
-			// XX..
-			blocks: [vec(0, 0), vec(0, 1), vec(1, 1), vec(1, 0)],
-			origin: vec(0.5, 0.5),
+			// .XX.
+			// .XX.
+			blocks: [vec(1, 0), vec(1, 1), vec(2, 1), vec(2, 0)],
+			origin: vec(1.5, 0.5),
 			color: color(0, 0, 255)
 		},
 		{
