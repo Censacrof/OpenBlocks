@@ -85,9 +85,16 @@ let PREV_STATE = "begin"
 let CURR_STATE = "begin"
 let NEXT_STATE = "begin"
 
-let lastFallUpdate = 0
-let fallCooldown = 10
 let fallingPiece = null
+
+let STARTING_FALL_TIMER = 500
+let fallTimerDuration = STARTING_FALL_TIMER 
+let fallTimerExpired = false
+function startFallTimer() {
+	fallTimerExpired = false
+	return setTimeout(function() { fallTimerExpired = true; }, fallTimerDuration)
+}
+
 function update() {
 	PREV_STATE = CURR_STATE
 	CURR_STATE = NEXT_STATE
@@ -95,8 +102,7 @@ function update() {
 	
 	switch (CURR_STATE) {
 		case "begin": {
-			lastFallUpdate = 0
-			fallCooldown = 1000
+			fallTimerDuration = STARTING_FALL_TIMER
 			NEXT_STATE = "newPiece"
 			break
 		}
@@ -105,43 +111,46 @@ function update() {
 			let p = PIECES[Math.floor(Math.random() * PIECES.length)]
 			fallingPiece = newFallingPiece(p.blocks, p.color)
 
+			startFallTimer()
 			NEXT_STATE = "fallPiece"
 			break
 		}
 
 		case "fallPiece": {
-			if (millis() - lastFallUpdate > fallCooldown) {
-				lastFallUpdate = millis()
+			if (!fallTimerExpired) {
+				break
+			}
+			let timer_hndl = startFallTimer()
+						
 
-				// check if piece is able to move down
-				let canFall = true
+			// check if piece is able to move down
+			let canFall = true
+			for (let i = 0; i < fallingPiece.blocks.length; i++) {
+				let b = fallingPiece.blocks[i]
+
+				if (b.y + 1 >= BOARD_NY) {
+					canFall = false
+					break
+				}
+
+				let cellUnder = board[b.y + 1][b.x]
+				if (cellUnder.isSolid && cellUnder.isStatic) {
+					canFall = false
+					break
+				}
+			}
+
+			if (canFall) {
+				fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, 1)))
+			}
+			else {
 				for (let i = 0; i < fallingPiece.blocks.length; i++) {
 					let b = fallingPiece.blocks[i]
-
-					if (b.y + 1 >= BOARD_NY) {
-						canFall = false
-						break
-					}
-
-
-					let cellUnder = board[b.y + 1][b.x]
-					if (cellUnder.isSolid && cellUnder.isStatic) {
-						canFall = false
-						break
-					}
+					board[b.y][b.x] = newBlock(true, true, fallingPiece.color)
 				}
 
-				if (canFall) {
-					fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, 1)))
-				}
-				else {
-					for (let i = 0; i < fallingPiece.blocks.length; i++) {
-						let b = fallingPiece.blocks[i]
-						board[b.y][b.x] = newBlock(true, true, fallingPiece.color)
-					}
-
-					NEXT_STATE = "newPiece"
-				}
+				NEXT_STATE = "newPiece"
+				clearTimeout(timer_hndl)
 			}
 			break
 		}
