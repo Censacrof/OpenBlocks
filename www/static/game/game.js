@@ -2,11 +2,12 @@ let WINDOW_NX = 30
 let WINDOW_NY = 24
 
 let BOARD_NX = 10
-let BOARD_NY = 20
+let BOARD_NY = 22
+let BOARD_HIDDEN_NY = 2
 let TILE_SIZE = 24
 
 let BOARD_SIZE_X = TILE_SIZE * BOARD_NX
-let BOARD_SIZE_Y = TILE_SIZE * BOARD_NY
+let BOARD_SIZE_Y = TILE_SIZE * (BOARD_NY - BOARD_HIDDEN_NY)
 
 // SRS Kick test sequence - https://tetris.fandom.com/wiki/SRS
 let KICK_SEQUENCE_JLSTZ = [
@@ -251,6 +252,13 @@ function startFallTimer() {
 
 let linesToClearY = []
 
+function keyTyped() {
+	if (key === 'f') // f -> toggle fullscreen
+		fullscreen(!fullscreen())
+
+	return false;
+}
+
 function update() {
 	PREV_STATE = CURR_STATE
 	CURR_STATE = NEXT_STATE
@@ -327,6 +335,21 @@ function update() {
 				else
 					NEXT_STATE = "newPiece"
 				
+				// check if game is lost
+				for (let y = 0; y < BOARD_HIDDEN_NY; y++) {
+					let mustBreak = false
+					for (let x = 0; x < BOARD_NX; x++) {
+						if (board[y][x].isSolid) {
+							NEXT_STATE = "lost"
+							mustBreak = true
+							break
+						}
+					}
+
+					if (mustBreak)
+						break
+				}
+
 				fallingPiece = null
 				clearTimeout(timer_hndl)
 			}
@@ -350,6 +373,9 @@ function update() {
 
 			NEXT_STATE = "newPiece"
 		}
+
+		case "lost": {
+		}
 	}
 }
 
@@ -368,10 +394,10 @@ function drawBoard() {
 	// borders
 	stroke(255)
 	fill(0)
-	rect(BOARD_POS_X, BOARD_POS_Y, BOARD_SIZE_X, BOARD_SIZE_Y)
+	rect(BOARD_POS_X, BOARD_POS_Y + BOARD_HIDDEN_NY, BOARD_SIZE_X, BOARD_SIZE_Y - BOARD_HIDDEN_NY)
 
 	// draw blocks
-	for (let y = 0; y < BOARD_NY; y++) {
+	for (let y = BOARD_HIDDEN_NY; y < BOARD_NY; y++) {
 		for (let x = 0; x < BOARD_NX; x++) {
 			let p = board[y][x]
 
@@ -380,7 +406,7 @@ function drawBoard() {
 			
 			stroke(255)
 			fill(p.color)
-			rect(BOARD_POS_X + x * TILE_SIZE, BOARD_POS_Y + y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+			rect(BOARD_POS_X + x * TILE_SIZE, BOARD_POS_Y + (y - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
 		}
 	}
 
@@ -390,7 +416,10 @@ function drawBoard() {
 		fill(fallingPiece.color)
 		for (let i = 0; i < fallingPiece.blocks.length; i++) {
 			let b = fallingPiece.blocks[i]
-			rect(BOARD_POS_X + b.x * TILE_SIZE, BOARD_POS_Y + b.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)	
+			if (b.y < BOARD_HIDDEN_NY)
+				continue
+
+			rect(BOARD_POS_X + b.x * TILE_SIZE, BOARD_POS_Y + (b.y - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)	
 		}
 
 		// stroke(255, 255, 255)
