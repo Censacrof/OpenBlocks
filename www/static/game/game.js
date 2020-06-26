@@ -249,10 +249,11 @@ function startFallTimer() {
 	return setTimeout(function() { fallTimerExpired = true; }, fallTimerDuration)
 }
 
+let linesToClearY = []
+
 function update() {
 	PREV_STATE = CURR_STATE
 	CURR_STATE = NEXT_STATE
-
 	
 	switch (CURR_STATE) {
 		case "begin": {
@@ -304,10 +305,50 @@ function update() {
 					board[b.y][b.x] = newBlock(true, true, fallingPiece.color)
 				}
 
-				NEXT_STATE = "newPiece"
+				// check if lines are compleated
+				linesToClearY = []
+				for (let y = 0; y < BOARD_NY; y++) {
+					let lineComplete = true
+					for (let x = 0; x < BOARD_NX; x++) {
+						if (!board[y][x].isSolid) {
+							lineComplete = false
+							break
+						}
+					}
+
+					if (!lineComplete)
+						continue
+					
+						linesToClearY.push(y)
+				}
+
+				if (linesToClearY.length > 0)
+					NEXT_STATE = "clearLines"
+				else
+					NEXT_STATE = "newPiece"
+				
+				fallingPiece = null
 				clearTimeout(timer_hndl)
 			}
 			break
+		}
+
+		case "clearLines": {
+			let nToClear = linesToClearY.length
+			linesToClearY = linesToClearY.sort((a, b) => b - a) // sorted descending
+
+			// remove cleared lines
+			for (let i = 0; i < nToClear; i++) {
+				board.splice(linesToClearY[i], 1)
+			}
+
+			// add empty lines on top
+			for (let i = 0; i < nToClear; i++) {
+				let emptyLine = Array(BOARD_SIZE_X).fill(newBlock(false, false, color(0)))
+				board.unshift(emptyLine)
+			}
+
+			NEXT_STATE = "newPiece"
 		}
 	}
 }
