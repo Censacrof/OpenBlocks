@@ -24,6 +24,27 @@ let KICK_SEQUENCE_I = [
 	[[], [], [], [],],
 ]
 
+class Timer {
+	constructor(duration) {
+		this.duration = duration
+		this.isExpired = false
+		this.handle = null
+	}
+
+	start() {
+		this.isExpired = false
+		this.handle = setTimeout(() => {
+			this.isExpired = true
+			this.handle = null
+		}, this.duration)
+	}
+
+	stop() {
+		clearTimeout(this.handle)
+		this.handle = null
+	}
+}
+
 function initKickSequences() {
 	let vec = createVector
 	
@@ -179,19 +200,18 @@ function rotateBlock(pos, origin, dr) {
 	return p5.Vector.add(res, origin)
 }
 
-let strafeTimerDuration = 50
-let strafeTimerExpired = true
+let strafeTimer = new Timer(50)
+strafeTimer.isExpired = true
 
-let rotateTimerDuration = 150
-let rotateTimerExpired = true
+let rotateTimer = new Timer(150)
+rotateTimer.isExpired = true
 function controlPiece() {
 	let dx = 0;
 	dx += keyIsDown(LEFT_ARROW) ? -1 : 0
 	dx += keyIsDown(RIGHT_ARROW) ? 1 : 0
 
-	if (strafeTimerExpired && dx != 0) {
-		strafeTimerExpired = false
-		setTimeout(function() { strafeTimerExpired = true }, strafeTimerDuration)
+	if (strafeTimer.isExpired && dx != 0) {
+		strafeTimer.start()
 
 		if (dx != 0) {
 			let canStrafe = true
@@ -220,9 +240,8 @@ function controlPiece() {
 	dr += keyIsDown(17) || keyIsDown(90) ? 1 : 0		// Ctrl, Z -> rotate counterclockwise
 	dr += keyIsDown(UP_ARROW) || keyIsDown(88) ? -1 : 0 // UP, X -> rotate clockwise
 
-	if (rotateTimerExpired && dr != 0) {
-		rotateTimerExpired = false
-		setTimeout(function() { rotateTimerExpired = true }, rotateTimerDuration)
+	if (rotateTimer.isExpired && dr != 0) {
+		rotateTimer.start()
 
 		newBlocks = Array(fallingPiece.blocks.length)
 		for (let i = 0; i < fallingPiece.blocks.length; i++) {
@@ -264,12 +283,7 @@ function controlPiece() {
 }
 
 let STARTING_FALL_TIMER = 250
-let fallTimerDuration = STARTING_FALL_TIMER 
-let fallTimerExpired = false
-function startFallTimer() {
-	fallTimerExpired = false
-	return setTimeout(function() { fallTimerExpired = true; }, fallTimerDuration)
-}
+let fallTimer = new Timer(STARTING_FALL_TIMER)
 
 let linesToClearY = []
 
@@ -323,7 +337,7 @@ function update() {
 			let p = RNGGetPiece()
 			fallingPiece = newFallingPiece(p.type, p.blocks, p.origin.copy(), p.color)
 
-			startFallTimer()
+			fallTimer.start()
 			NEXT_STATE = "fallPiece"
 			break
 		}
@@ -331,9 +345,9 @@ function update() {
 		case "fallPiece": {
 			controlPiece()
 
-			if (!fallTimerExpired)
+			if (!fallTimer.isExpired)
 				break
-			let timer_hndl = startFallTimer()						
+			fallTimer.start()
 
 			if (canPieceMoveDown(fallingPiece.blocks)) {
 				fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, 1)))
@@ -383,7 +397,7 @@ function update() {
 				}
 
 				fallingPiece = null
-				clearTimeout(timer_hndl)
+				fallTimer.stop()
 			}
 			break
 		}
