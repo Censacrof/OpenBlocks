@@ -405,14 +405,44 @@ function drawBoard() {
 				continue
 			
 			stroke(255)
-			fill(p.color)
+
+			const attenuate = 0.5
+			fill(p.color._getRed() * attenuate, p.color._getGreen() * attenuate, p.color._getBlue() * attenuate)
 			rect(BOARD_POS_X + x * TILE_SIZE, BOARD_POS_Y + (y - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+		}
+	}
+
+	// draw ghost piece
+	if (fallingPiece) {
+		let yOffset
+		for (yOffset = 0; true; yOffset++) {
+			let mustBreak = false
+			for (let i = 0; i < fallingPiece.blocks.length; i++) {
+				let b = fallingPiece.blocks[i]
+
+				if (b.y + yOffset + 1 >= BOARD_NY || board[b.y + yOffset + 1][b.x].isSolid) {
+					mustBreak = true
+					break
+				}
+			}
+
+			if (mustBreak)
+				break
+			
+			
+		}
+
+		stroke(255)
+		fill(0)
+		for (let i = 0; i < fallingPiece.blocks.length; i++) {
+			let b = fallingPiece.blocks[i]
+			rect(BOARD_POS_X + b.x * TILE_SIZE, BOARD_POS_Y + (b.y + yOffset - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
 		}
 	}
 
 	// draw falling piece
 	if (fallingPiece) {
-		stroke(fallingPiece.color)
+		stroke(255)
 		fill(fallingPiece.color)
 		for (let i = 0; i < fallingPiece.blocks.length; i++) {
 			let b = fallingPiece.blocks[i]
@@ -425,5 +455,5 @@ function drawBoard() {
 		// stroke(255, 255, 255)
 		// fill(255, 255, 255)
 		// rect(BOARD_POS_X + fallingPiece.origin.x * TILE_SIZE, BOARD_POS_Y + fallingPiece.origin.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-	}	
+	}
 }
