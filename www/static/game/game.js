@@ -259,6 +259,33 @@ function keyTyped() {
 	return false;
 }
 
+let RNG_BAG = []
+function RNGGetPiece() {
+	let initBag = function() {
+		// numbers 0 to PIECES.length
+		RNG_BAG = Array.from({length: PIECES.length}, (v, k) => k)
+
+		// shuffle the bag
+		for (let i = 0; i < PIECES.length; i++) {
+			let k = i + Math.floor(Math.random() * (PIECES.length - i))
+
+			let swap = RNG_BAG[i]
+			RNG_BAG[i] = RNG_BAG[k]
+			RNG_BAG[k] = swap
+		}
+	}
+
+	if (RNG_BAG.length == 0)
+		initBag()
+	
+	let res = RNG_BAG.shift()
+
+	if (RNG_BAG.length == 0)
+		initBag()
+	
+	return PIECES[res]
+}
+
 function update() {
 	PREV_STATE = CURR_STATE
 	CURR_STATE = NEXT_STATE
@@ -266,12 +293,13 @@ function update() {
 	switch (CURR_STATE) {
 		case "begin": {
 			fallTimerDuration = STARTING_FALL_TIMER
+			RNG_BAG = []
 			NEXT_STATE = "newPiece"
 			break
 		}
 
 		case "newPiece": {
-			let p = PIECES[Math.floor(Math.random() * PIECES.length)]
+			let p = RNGGetPiece()
 			fallingPiece = newFallingPiece(p.type, p.blocks, p.origin.copy(), p.color)
 
 			startFallTimer()
