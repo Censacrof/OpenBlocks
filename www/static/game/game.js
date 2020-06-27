@@ -27,7 +27,7 @@ let KICK_SEQUENCE_I = [
 class Timer {
 	constructor(duration) {
 		this.duration = duration
-		this.isExpired = false
+		this.isExpired = true
 		this.handle = null
 	}
 
@@ -42,6 +42,7 @@ class Timer {
 	stop() {
 		clearTimeout(this.handle)
 		this.handle = null
+		this.isExpired = true
 	}
 }
 
@@ -282,9 +283,6 @@ function controlPiece() {
 	}
 }
 
-let STARTING_FALL_TIMER = 250
-let fallTimer = new Timer(STARTING_FALL_TIMER)
-
 let linesToClearY = []
 
 function keyTyped() {
@@ -321,6 +319,10 @@ function RNGGetPiece() {
 	return PIECES[res]
 }
 
+let STARTING_FALL_TIMER = 250
+let fallTimer = new Timer(STARTING_FALL_TIMER)
+
+let lockTimer = new Timer(500)
 function update() {
 	PREV_STATE = CURR_STATE
 	CURR_STATE = NEXT_STATE
@@ -354,51 +356,66 @@ function update() {
 				fallingPiece.origin.add(createVector(0, 1))
 			}
 			else {
-				for (let i = 0; i < fallingPiece.blocks.length; i++) {
-					let b = fallingPiece.blocks[i]
-					board[b.y][b.x] = newBlock(true, true, fallingPiece.color)
-				}
-
-				// check if lines are compleated
-				linesToClearY = []
-				for (let y = 0; y < BOARD_NY; y++) {
-					let lineComplete = true
-					for (let x = 0; x < BOARD_NX; x++) {
-						if (!board[y][x].isSolid) {
-							lineComplete = false
-							break
-						}
-					}
-
-					if (!lineComplete)
-						continue
-					
-						linesToClearY.push(y)
-				}
-
-				if (linesToClearY.length > 0)
-					NEXT_STATE = "clearLines"
-				else
-					NEXT_STATE = "newPiece"
-				
-				// check if game is lost
-				for (let y = 0; y < BOARD_HIDDEN_NY; y++) {
-					let mustBreak = false
-					for (let x = 0; x < BOARD_NX; x++) {
-						if (board[y][x].isSolid) {
-							NEXT_STATE = "lost"
-							mustBreak = true
-							break
-						}
-					}
-
-					if (mustBreak)
-						break
-				}
-
-				fallingPiece = null
-				fallTimer.stop()
+				lockTimer.start()
+				NEXT_STATE = "locking"
 			}
+			break
+		}
+
+		case "locking": {
+			controlPiece()
+
+			if (canPieceMoveDown(fallingPiece.blocks)) {
+				NEXT_STATE = "fallPiece"
+				break
+			}
+
+			if (!lockTimer.isExpired)
+				break
+
+			for (let i = 0; i < fallingPiece.blocks.length; i++) {
+				let b = fallingPiece.blocks[i]
+				board[b.y][b.x] = newBlock(true, true, fallingPiece.color)
+			}
+
+			// check if lines are compleated
+			linesToClearY = []
+			for (let y = 0; y < BOARD_NY; y++) {
+				let lineComplete = true
+				for (let x = 0; x < BOARD_NX; x++) {
+					if (!board[y][x].isSolid) {
+						lineComplete = false
+						break
+					}
+				}
+
+				if (!lineComplete)
+					continue
+				
+					linesToClearY.push(y)
+			}
+
+			if (linesToClearY.length > 0)
+				NEXT_STATE = "clearLines"
+			else
+				NEXT_STATE = "newPiece"
+			
+			// check if game is lost
+			for (let y = 0; y < BOARD_HIDDEN_NY; y++) {
+				let mustBreak = false
+				for (let x = 0; x < BOARD_NX; x++) {
+					if (board[y][x].isSolid) {
+						NEXT_STATE = "lost"
+						mustBreak = true
+						break
+					}
+				}
+
+				if (mustBreak)
+					break
+			}
+
+			fallingPiece = null
 			break
 		}
 
