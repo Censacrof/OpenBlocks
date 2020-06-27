@@ -54,12 +54,17 @@ function initKickSequences() {
 	KICK_SEQUENCE_I[0][3] = [vec(0, -0), vec(-1, -0), vec(2, -0), vec(-1, -2), vec(2, 1),]
 }
 
+let BOARD_POS_X
+let BOARD_POS_Y
 
 let PIECES
 let board
 function setup() {
 	let canvas = createCanvas(TILE_SIZE * WINDOW_NX, TILE_SIZE * WINDOW_NY)
 	canvas.parent("game")
+
+	BOARD_POS_X = 2 * TILE_SIZE
+	BOARD_POS_Y = height - BOARD_SIZE_Y - 2 * TILE_SIZE
 
 	background(0);
 
@@ -414,17 +419,14 @@ function draw() {
 	drawBoard()
 }
 
-function drawBlock(block, boardPosX, boardPosY) {
+function drawBlock(block) {
 	// if (b.x < 0 || b.x >= BOARD_NX || b.y < 0 || b.y >= BOARD_NY)
 	// 	return
 	
-	rect(boardPosX + block.x * TILE_SIZE, boardPosY + (block.y - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+	rect(BOARD_POS_X + block.x * TILE_SIZE, BOARD_POS_Y + (block.y - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
 }
 
 function drawBoard() {
-	let BOARD_POS_X = 2 * TILE_SIZE
-	let BOARD_POS_Y = height - BOARD_SIZE_Y - 2 * TILE_SIZE
-
 	// borders
 	stroke(255)
 	fill(0)
@@ -442,7 +444,7 @@ function drawBoard() {
 
 			const attenuate = 0.5
 			fill(p.color._getRed() * attenuate, p.color._getGreen() * attenuate, p.color._getBlue() * attenuate)
-			rect(BOARD_POS_X + x * TILE_SIZE, BOARD_POS_Y + (y - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+			drawBlock(createVector(x, y))
 		}
 	}
 
@@ -462,7 +464,7 @@ function drawBoard() {
 		fill(0)
 		for (let i = 0; i < ghostBlocks.length; i++) {
 			let b = ghostBlocks[i]
-			drawBlock(b, BOARD_POS_X, BOARD_POS_Y)
+			drawBlock(b)
 		}
 	}
 
@@ -475,7 +477,7 @@ function drawBoard() {
 			if (b.y < BOARD_HIDDEN_NY)
 				continue
 
-			drawBlock(b, BOARD_POS_X, BOARD_POS_Y)	
+			drawBlock(b)	
 		}
 
 		// stroke(255, 255, 255)
