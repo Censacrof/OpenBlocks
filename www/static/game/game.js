@@ -134,9 +134,9 @@ function setup() {
 
 	initKickSequences()
 
-	board = Array(BOARD_SIZE_Y)
-	for (let i = 0; i < BOARD_SIZE_Y; i++) {
-		board[i] = Array(BOARD_SIZE_X).fill(newBlock(false, false, color(0)))
+	board = Array(BOARD_NY)
+	for (let i = 0; i < BOARD_NY; i++) {
+		board[i] = Array(BOARD_NX).fill(newBlock(false, false, color(0)))
 	}
 }
 
@@ -151,6 +151,22 @@ let CURR_STATE = "begin"
 let NEXT_STATE = "begin"
 
 let fallingPiece = null
+
+// check if piece made out of blocks is able to move down
+function canPieceMoveDown(blocks) {
+	for (let i = 0; i < blocks.length; i++) {
+		let b = blocks[i]
+
+		let targetY = b.y + 1
+		if (targetY >= BOARD_NY)
+			return false
+		
+		if (board[targetY][b.x].isSolid)
+			return false
+	}
+
+	return true
+}
 
 function rotateBlock(pos, origin, dr) {
 	let res = p5.Vector.sub(pos, origin)
@@ -314,24 +330,7 @@ function update() {
 				break
 			let timer_hndl = startFallTimer()						
 
-			// check if piece is able to move down
-			let canFall = true
-			for (let i = 0; i < fallingPiece.blocks.length; i++) {
-				let b = fallingPiece.blocks[i]
-
-				if (b.y + 1 >= BOARD_NY) {
-					canFall = false
-					break
-				}
-
-				let cellUnder = board[b.y + 1][b.x]
-				if (cellUnder.isSolid && cellUnder.isStatic) {
-					canFall = false
-					break
-				}
-			}
-
-			if (canFall) {
+			if (canPieceMoveDown(fallingPiece.blocks)) {
 				fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, 1)))
 				fallingPiece.origin.add(createVector(0, 1))
 			}
@@ -415,6 +414,13 @@ function draw() {
 	drawBoard()
 }
 
+function drawBlock(block, boardPosX, boardPosY) {
+	// if (b.x < 0 || b.x >= BOARD_NX || b.y < 0 || b.y >= BOARD_NY)
+	// 	return
+	
+	rect(boardPosX + block.x * TILE_SIZE, boardPosY + (block.y - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+}
+
 function drawBoard() {
 	let BOARD_POS_X = 2 * TILE_SIZE
 	let BOARD_POS_Y = height - BOARD_SIZE_Y - 2 * TILE_SIZE
@@ -442,29 +448,21 @@ function drawBoard() {
 
 	// draw ghost piece
 	if (fallingPiece) {
+		let ghostBlocks
+
 		let yOffset
-		for (yOffset = 0; true; yOffset++) {
-			let mustBreak = false
-			for (let i = 0; i < fallingPiece.blocks.length; i++) {
-				let b = fallingPiece.blocks[i]
+		for (yOffset = 0; yOffset < BOARD_NY; yOffset++) {
+			ghostBlocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, yOffset)))
 
-				if (b.y + yOffset + 1 >= BOARD_NY || board[b.y + yOffset + 1][b.x].isSolid) {
-					mustBreak = true
-					break
-				}
-			}
-
-			if (mustBreak)
+			if (!canPieceMoveDown(ghostBlocks))
 				break
-			
-			
 		}
 
 		stroke(255)
 		fill(0)
-		for (let i = 0; i < fallingPiece.blocks.length; i++) {
-			let b = fallingPiece.blocks[i]
-			rect(BOARD_POS_X + b.x * TILE_SIZE, BOARD_POS_Y + (b.y + yOffset - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+		for (let i = 0; i < ghostBlocks.length; i++) {
+			let b = ghostBlocks[i]
+			drawBlock(b, BOARD_POS_X, BOARD_POS_Y)
 		}
 	}
 
@@ -477,7 +475,7 @@ function drawBoard() {
 			if (b.y < BOARD_HIDDEN_NY)
 				continue
 
-			rect(BOARD_POS_X + b.x * TILE_SIZE, BOARD_POS_Y + (b.y - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)	
+			drawBlock(b, BOARD_POS_X, BOARD_POS_Y)	
 		}
 
 		// stroke(255, 255, 255)
