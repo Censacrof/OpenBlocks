@@ -196,8 +196,8 @@ function controlPiece() {
 	}
 
 	let dr = 0;
-	dr += keyIsDown(65) ? 1 : 0  // A -> rotate counterclockwise
-	dr += keyIsDown(68) ? -1 : 0 // D -> rotate clockwise
+	dr += keyIsDown(17) || keyIsDown(90) ? 1 : 0		// Ctrl, Z -> rotate counterclockwise
+	dr += keyIsDown(UP_ARROW) || keyIsDown(88) ? -1 : 0 // UP, X -> rotate clockwise
 
 	if (rotateTimerExpired && dr != 0) {
 		rotateTimerExpired = false
