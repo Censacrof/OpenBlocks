@@ -1,6 +1,3 @@
-let WINDOW_NX = 30
-let WINDOW_NY = 24
-
 let BOARD_NX = 10
 let BOARD_NY = 22
 let BOARD_HIDDEN_NY = 2
@@ -8,6 +5,12 @@ let TILE_SIZE = 24
 
 let BOARD_SIZE_X = TILE_SIZE * BOARD_NX
 let BOARD_SIZE_Y = TILE_SIZE * (BOARD_NY - BOARD_HIDDEN_NY)
+
+let BOARD_POS_X = TILE_SIZE * 8
+let BOARD_POS_Y = TILE_SIZE * 2
+
+let WINDOW_NX = 30
+let WINDOW_NY = (BOARD_NY - BOARD_HIDDEN_NY) + 4
 
 // SRS Kick test sequence - https://tetris.fandom.com/wiki/SRS
 let KICK_SEQUENCE_JLSTZ = [
@@ -76,17 +79,11 @@ function initKickSequences() {
 	KICK_SEQUENCE_I[0][3] = [vec(0, -0), vec(-1, -0), vec(2, -0), vec(-1, -2), vec(2, 1),]
 }
 
-let BOARD_POS_X
-let BOARD_POS_Y
-
 let PIECES
 let board
 function setup() {
 	let canvas = createCanvas(TILE_SIZE * WINDOW_NX, TILE_SIZE * WINDOW_NY)
 	canvas.parent("game")
-
-	BOARD_POS_X = 2 * TILE_SIZE
-	BOARD_POS_Y = height - BOARD_SIZE_Y - 2 * TILE_SIZE
 
 	background(0);
 
@@ -451,8 +448,8 @@ function draw() {
 }
 
 function drawBlock(block) {
-	// if (b.x < 0 || b.x >= BOARD_NX || b.y < 0 || b.y >= BOARD_NY)
-	// 	return
+	if (block.x < 0 || block.x >= BOARD_NX || block.y < BOARD_HIDDEN_NY || block.y >= BOARD_NY)
+		return
 	
 	rect(BOARD_POS_X + block.x * TILE_SIZE, BOARD_POS_Y + (block.y - BOARD_HIDDEN_NY) * TILE_SIZE, TILE_SIZE, TILE_SIZE)
 }
@@ -514,5 +511,35 @@ function drawBoard() {
 		// stroke(255, 255, 255)
 		// fill(255, 255, 255)
 		// rect(BOARD_POS_X + fallingPiece.origin.x * TILE_SIZE, BOARD_POS_Y + fallingPiece.origin.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+	}
+
+	drawNextBlockPreview()
+}
+
+function drawNextBlockPreview() {
+	let previewX = BOARD_POS_X + (BOARD_NX + 1) * TILE_SIZE
+	let previewY = TILE_SIZE * 3
+
+	stroke(255)
+	fill(255)
+	textSize(TILE_SIZE * 0.75)
+	text(textAlign(LEFT))
+	text('NEXT', previewX, previewY - TILE_SIZE / 2)
+
+	fill(0)
+	stroke(255)
+	rect(previewX, previewY, TILE_SIZE * 3, TILE_SIZE * 2)
+
+	if (RNG_BAG.length > 0) {
+		let p = PIECES[RNG_BAG[0]]
+		stroke(255)
+		fill(p.color)
+
+		for (let i = 0; i < p.blocks.length; i++) {
+			let b = p.blocks[i]
+
+			let paddingX = p.type != "I" && p.type != "O" ? 0.5 : 0
+			rect(previewX + (b.x + paddingX + 1) * TILE_SIZE * 0.5, previewY + (b.y + 1) * TILE_SIZE * 0.5, TILE_SIZE * 0.5, TILE_SIZE * 0.5)
+		}
 	}
 }
