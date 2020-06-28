@@ -6,7 +6,7 @@ let TILE_SIZE = 24
 let BOARD_SIZE_X = TILE_SIZE * BOARD_NX
 let BOARD_SIZE_Y = TILE_SIZE * (BOARD_NY - BOARD_HIDDEN_NY)
 
-let BOARD_POS_X = TILE_SIZE * 8
+let BOARD_POS_X = TILE_SIZE * 5
 let BOARD_POS_Y = TILE_SIZE * 2
 
 let WINDOW_NX = 30
@@ -165,16 +165,22 @@ function setup() {
 }
 
 function newBlock(_isSolid, _isStatic, _color) { return {isSolid: _isSolid, isStatic: _isStatic, color: _color} }
-function newFallingPiece(type, blocks, origin, color) {
+function newFallingPiece(index) {
+	let p = PIECES[index]
+
 	let offset = createVector(3, 0)
-	return {type: type, blocks: blocks.map(i => p5.Vector.add(i, offset)), origin: p5.Vector.add(origin, offset), rotationState: 0, color: color} 
+	return {index: index, type: p.type, blocks: p.blocks.map(i => p5.Vector.add(i, offset)), origin: p5.Vector.add(p.origin, offset), rotationState: 0, color: p.color} 
 }
 
 let PREV_STATE = "begin"
 let CURR_STATE = "begin"
 let NEXT_STATE = "begin"
 
+let nextBlockIndex = -1
 let fallingPiece = null
+
+let holdPieceIndex = -1
+let canHold = true
 
 // check if piece made out of blocks is able to move down
 function canPieceMoveDown(blocks) {
@@ -278,6 +284,19 @@ function controlPiece() {
 			break
 		}
 	}
+
+	let skipState = false
+	if ((keyIsDown(16) || keyIsDown(67)) && canHold) { // Shift, C -> hold
+		if (fallingPiece.type == "I")
+
+		nextBlockIndex = holdPieceIndex
+		holdPieceIndex = fallingPiece.index
+		canHold = false
+		skipState = true
+		NEXT_STATE = "newPiece"
+	}
+
+	return skipState
 }
 
 let linesToClearY = []
@@ -308,12 +327,12 @@ function RNGGetPiece() {
 	if (RNG_BAG.length == 0)
 		initBag()
 	
-	let res = RNG_BAG.shift()
+	let index = RNG_BAG.shift()
 
 	if (RNG_BAG.length == 0)
 		initBag()
 	
-	return PIECES[res]
+	return newFallingPiece(index)
 }
 
 let STARTING_FALL_TIMER = 250
@@ -326,23 +345,29 @@ function update() {
 	
 	switch (CURR_STATE) {
 		case "begin": {
-			fallTimerDuration = STARTING_FALL_TIMER
+			holdPieceIndex = -1
+			nextBlockIndex = -1
+			canHold = true
 			RNG_BAG = []
 			NEXT_STATE = "newPiece"
 			break
 		}
 
 		case "newPiece": {
-			let p = RNGGetPiece()
-			fallingPiece = newFallingPiece(p.type, p.blocks, p.origin.copy(), p.color)
+			if (nextBlockIndex >= 0) {
+				fallingPiece = newFallingPiece(nextBlockIndex)
+				nextBlockIndex = -1
+			}
+			else 
+				fallingPiece = RNGGetPiece()
 
-			fallTimer.start()
 			NEXT_STATE = "fallPiece"
 			break
 		}
 
 		case "fallPiece": {
-			controlPiece()
+			if (controlPiece())
+				break
 
 			if (!fallTimer.isExpired)
 				break
@@ -360,7 +385,8 @@ function update() {
 		}
 
 		case "locking": {
-			controlPiece()
+			if (controlPiece())
+				break
 
 			if (canPieceMoveDown(fallingPiece.blocks)) {
 				NEXT_STATE = "fallPiece"
@@ -370,10 +396,14 @@ function update() {
 			if (!lockTimer.isExpired)
 				break
 
+			// lock the piece
 			for (let i = 0; i < fallingPiece.blocks.length; i++) {
 				let b = fallingPiece.blocks[i]
 				board[b.y][b.x] = newBlock(true, true, fallingPiece.color)
 			}
+
+			// reset canHold
+			canHold = true
 
 			// check if lines are compleated
 			linesToClearY = []
@@ -513,22 +543,26 @@ function drawBoard() {
 		// rect(BOARD_POS_X + fallingPiece.origin.x * TILE_SIZE, BOARD_POS_Y + fallingPiece.origin.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
 	}
 
-	drawNextBlockPreview()
+	drawNextPiecePreview()
+	drawHoldPiece()
 }
 
-function drawNextBlockPreview() {
-	let previewX = BOARD_POS_X + (BOARD_NX + 1) * TILE_SIZE
-	let previewY = TILE_SIZE * 3
+function drawNextPiecePreview() {
+	let x = BOARD_POS_X + (BOARD_NX + 1) * TILE_SIZE
+	let y = TILE_SIZE * 3
+
+	let w = TILE_SIZE * 3
+	let h = TILE_SIZE * 2
+
+	fill(0)
+	stroke(255)
+	rect(x, y, w, h)
 
 	stroke(255)
 	fill(255)
 	textSize(TILE_SIZE * 0.75)
 	text(textAlign(LEFT))
-	text('NEXT', previewX, previewY - TILE_SIZE / 2)
-
-	fill(0)
-	stroke(255)
-	rect(previewX, previewY, TILE_SIZE * 3, TILE_SIZE * 2)
+	text('NEXT', x, y - TILE_SIZE / 2)
 
 	if (RNG_BAG.length > 0) {
 		let p = PIECES[RNG_BAG[0]]
@@ -539,7 +573,38 @@ function drawNextBlockPreview() {
 			let b = p.blocks[i]
 
 			let paddingX = p.type != "I" && p.type != "O" ? 0.5 : 0
-			rect(previewX + (b.x + paddingX + 1) * TILE_SIZE * 0.5, previewY + (b.y + 1) * TILE_SIZE * 0.5, TILE_SIZE * 0.5, TILE_SIZE * 0.5)
+			rect(x + (b.x + paddingX + 1) * TILE_SIZE * 0.5, y + (b.y + 1) * TILE_SIZE * 0.5, TILE_SIZE * 0.5, TILE_SIZE * 0.5)
+		}
+	}
+}
+
+function drawHoldPiece() {
+	let x = TILE_SIZE * 1
+	let y = TILE_SIZE * 3
+
+	let w = TILE_SIZE * 3
+	let h = TILE_SIZE * 2
+
+	fill(0)
+	stroke(255)
+	rect(x, y, w, h)
+
+	stroke(255)
+	fill(255)
+	textSize(TILE_SIZE * 0.75)
+	text(textAlign(RIGHT))
+	text('HOLD', x + w, y - TILE_SIZE / 2)
+
+	if (holdPieceIndex >= 0) {
+		let p = PIECES[holdPieceIndex]
+		stroke(255)
+		fill(p.color)
+
+		for (let i = 0; i < p.blocks.length; i++) {
+			let b = p.blocks[i]
+
+			let paddingX = p.type != "I" && p.type != "O" ? 0.5 : 0
+			rect(x + (b.x + paddingX + 1) * TILE_SIZE * 0.5, y + (b.y + 1) * TILE_SIZE * 0.5, TILE_SIZE * 0.5, TILE_SIZE * 0.5)
 		}
 	}
 }
