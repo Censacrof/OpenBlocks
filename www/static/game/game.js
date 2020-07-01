@@ -316,6 +316,8 @@ function controlPiece() {
 			instantLock = true
 			canHardDrop = false
 
+			score += yOffset * 2
+
 			skipState = true
 			NEXT_STATE = "locking"
 		}
@@ -365,13 +367,17 @@ function RNGGetPiece() {
 let canHardDrop = true
 let softDrop = false
 
-let STARTING_FALL_TIMER = 250
 let SOFT_DROP_FALL_TIMER= 50
-let fallTimer = new Timer(STARTING_FALL_TIMER)
+let fallTimer = new Timer(1000)
 
 let instantLock = false
-
 let lockTimer = new Timer(500)
+
+let score = 0
+let level = 1
+let linesCleared = 0
+
+let softDropScore = 0
 function update() {
 	PREV_STATE = CURR_STATE
 	CURR_STATE = NEXT_STATE
@@ -383,6 +389,9 @@ function update() {
 			canHold = true
 			canHardDrop = true
 			instantLock = false
+			score = 0
+			level = 1
+			linesCleared = 0
 			RNG_BAG = []
 			NEXT_STATE = "newPiece"
 			break
@@ -396,6 +405,7 @@ function update() {
 			else 
 				fallingPiece = RNGGetPiece()
 
+			softDropScore = 0
 			NEXT_STATE = "fallPiece"
 			break
 		}
@@ -407,7 +417,11 @@ function update() {
 			if (!fallTimer.isExpired)
 				break
 			
-			fallTimer.duration = softDrop ? SOFT_DROP_FALL_TIMER : STARTING_FALL_TIMER
+			if (softDrop)
+				fallTimer.duration = SOFT_DROP_FALL_TIMER
+			else
+				fallTimer.duration = 1000 * Math.pow((0.8-((level-1)*0.007)), level - 1)
+			 
 			fallTimer.start()
 
 			if (canPieceMoveDown(fallingPiece.blocks)) {
@@ -418,6 +432,13 @@ function update() {
 				lockTimer.start()
 				NEXT_STATE = "locking"
 			}
+
+
+			if (softDrop && softDropScore < 20) {
+				softDropScore += 1
+				score += 1
+			}
+
 			break
 		}
 
@@ -503,6 +524,18 @@ function update() {
 				let emptyLine = Array(BOARD_SIZE_X).fill(newBlock(false, false, color(0)))
 				board.unshift(emptyLine)
 			}
+
+			if (nToClear == 1)
+				score += 100 * level
+			else if (nToClear == 2)
+				score += 300 * level
+			else if (nToClear == 3)
+				score += 500 * level
+			else if (nToClear == 4)
+				score += 800 * level
+
+			linesCleared += nToClear
+			level = 1 + Math.floor(linesCleared / 10)
 
 			NEXT_STATE = "newPiece"
 		}
@@ -665,7 +698,7 @@ function drawScore() {
 	text('SCORE', BOARD_POS_X, BOARD_POS_Y - TILE_SIZE / 4)
 
 	text(textAlign(RIGHT))
-	text('0', BOARD_POS_X + BOARD_NX * TILE_SIZE, BOARD_POS_Y - TILE_SIZE / 4)
+	text(score.toString(), BOARD_POS_X + BOARD_NX * TILE_SIZE, BOARD_POS_Y - TILE_SIZE / 4)
 }
 
 function drawLevel() {
@@ -684,4 +717,7 @@ function drawLevel() {
 	textSize(TILE_SIZE * 0.75)
 	text(textAlign(RIGHT))
 	text('LEVEL', x + w, y - TILE_SIZE / 2)
+
+	text(textAlign(CENTER))
+	text(level.toString(), x + w / 2, y + h / 2 + TILE_SIZE / 4)
 }
