@@ -519,7 +519,9 @@ function drawBoard() {
 		}
 
 		stroke(255)
-		fill(0)
+		
+		const attenuate = 0.1
+		fill(fallingPiece.color._getRed() * attenuate, fallingPiece.color._getGreen() * attenuate, fallingPiece.color._getBlue() * attenuate)
 		for (let i = 0; i < ghostBlocks.length; i++) {
 			let b = ghostBlocks[i]
 			drawBlock(b)
