@@ -293,6 +293,14 @@ function controlPiece() {
 		skipState = true
 		NEXT_STATE = "newPiece"
 	}
+	
+	if (keyIsDown(83) || keyIsDown(98)) { // S, Num 2 -> soft drop
+		if (!softDrop)
+			fallTimer.stop()
+		softDrop = true
+	}
+	else
+		softDrop = false
 
 	if (keyIsDown(32) || keyIsDown(104)) { // Space, Num 8 -> hard drop
 		if (canHardDrop) {
@@ -355,8 +363,10 @@ function RNGGetPiece() {
 }
 
 let canHardDrop = true
+let softDrop = false
 
 let STARTING_FALL_TIMER = 250
+let SOFT_DROP_FALL_TIMER= 50
 let fallTimer = new Timer(STARTING_FALL_TIMER)
 
 let instantLock = false
@@ -396,6 +406,8 @@ function update() {
 
 			if (!fallTimer.isExpired)
 				break
+			
+			fallTimer.duration = softDrop ? SOFT_DROP_FALL_TIMER : STARTING_FALL_TIMER
 			fallTimer.start()
 
 			if (canPieceMoveDown(fallingPiece.blocks)) {
