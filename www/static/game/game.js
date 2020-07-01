@@ -720,4 +720,17 @@ function drawLevel() {
 
 	text(textAlign(CENTER))
 	text(level.toString(), x + w / 2, y + h / 2 + TILE_SIZE / 4)
+
+	// progress bar
+	let margin = 0.2 * TILE_SIZE
+	let barX = x + margin
+	let barY = y + h - margin
+	let barW = w - 2 * margin
+	let barH = margin * 2
+	stroke(255)
+	fill(0)
+	rect(barX, barY, barW, barH)
+
+	fill(255)
+	rect(barX, barY, lerp(0, barW, (linesCleared % 10) / 10), barH)
 }
