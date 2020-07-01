@@ -211,8 +211,8 @@ let rotateTimer = new Timer(150)
 rotateTimer.isExpired = true
 function controlPiece() {
 	let dx = 0;
-	dx += keyIsDown(LEFT_ARROW) ? -1 : 0
-	dx += keyIsDown(RIGHT_ARROW) ? 1 : 0
+	dx += keyIsDown(LEFT_ARROW) || keyIsDown(100) ? -1 : 0 // Left, Num 4 -> strafe left
+	dx += keyIsDown(RIGHT_ARROW) || keyIsDown(102) ? 1 : 0 // Right, Num 6 -> strafe right
 
 	if (strafeTimer.isExpired && dx != 0) {
 		strafeTimer.start()
@@ -241,8 +241,8 @@ function controlPiece() {
 	}
 
 	let dr = 0;
-	dr += keyIsDown(17) || keyIsDown(90) ? 1 : 0		// Ctrl, Z -> rotate counterclockwise
-	dr += keyIsDown(UP_ARROW) || keyIsDown(88) ? -1 : 0 // UP, X -> rotate clockwise
+	dr += keyIsDown(17) || keyIsDown(90) || keyIsDown(99) || keyIsDown(103) ? 1 : 0	// Ctrl, Z, Num 3, Num 7 -> rotate counterclockwise
+	dr += keyIsDown(UP_ARROW) || keyIsDown(88) || keyIsDown(97) || keyIsDown(101) || keyIsDown(105) ? -1 : 0 // Up, X, Num 1, Num 5, Num 9 -> rotate clockwise
 
 	if (rotateTimer.isExpired && dr != 0) {
 		rotateTimer.start()
@@ -286,7 +286,7 @@ function controlPiece() {
 	}
 
 	let skipState = false
-	if ((keyIsDown(16) || keyIsDown(67)) && canHold) { // Shift, C -> hold
+	if ((keyIsDown(16) || keyIsDown(67) || keyIsDown(96)) && canHold) { // Shift, C, Num 0 -> hold
 		swappedHoldPieceIndex = holdPieceIndex
 		holdPieceIndex = fallingPiece.index
 		canHold = false
@@ -294,7 +294,7 @@ function controlPiece() {
 		NEXT_STATE = "newPiece"
 	}
 
-	if (keyIsDown(32)) { // Space -> hard drop
+	if (keyIsDown(32) || keyIsDown(104)) { // Space, Num 8 -> hard drop
 		if (canHardDrop) {
 			let yOffset
 			for (yOffset = 0; yOffset < BOARD_NY; yOffset++) {
