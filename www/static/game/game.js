@@ -1,7 +1,7 @@
 let BOARD_NX = 10
 let BOARD_NY = 22
 let BOARD_HIDDEN_NY = 2
-let TILE_SIZE = 24
+let TILE_SIZE = 32
 
 let BOARD_SIZE_X = TILE_SIZE * BOARD_NX
 let BOARD_SIZE_Y = TILE_SIZE * (BOARD_NY - BOARD_HIDDEN_NY)
@@ -9,7 +9,7 @@ let BOARD_SIZE_Y = TILE_SIZE * (BOARD_NY - BOARD_HIDDEN_NY)
 let BOARD_POS_X = TILE_SIZE * 5
 let BOARD_POS_Y = TILE_SIZE * 2
 
-let WINDOW_NX = 30
+let WINDOW_NX = BOARD_NX + 10
 let WINDOW_NY = (BOARD_NY - BOARD_HIDDEN_NY) + 4
 
 // SRS Kick test sequence - https://tetris.fandom.com/wiki/SRS
@@ -590,6 +590,8 @@ function drawBoard() {
 
 	drawNextPiecePreview()
 	drawHoldPiece()
+	drawScore()
+	drawLevel()
 }
 
 function drawNextPiecePreview() {
@@ -652,4 +654,34 @@ function drawHoldPiece() {
 			rect(x + (b.x + paddingX + 1) * TILE_SIZE * 0.5, y + (b.y + 1) * TILE_SIZE * 0.5, TILE_SIZE * 0.5, TILE_SIZE * 0.5)
 		}
 	}
+}
+
+function drawScore() {
+	stroke(255)
+	fill(255)
+	textSize(TILE_SIZE * 0.5)
+
+	text(textAlign(LEFT))
+	text('SCORE', BOARD_POS_X, BOARD_POS_Y - TILE_SIZE / 4)
+
+	text(textAlign(RIGHT))
+	text('0', BOARD_POS_X + BOARD_NX * TILE_SIZE, BOARD_POS_Y - TILE_SIZE / 4)
+}
+
+function drawLevel() {
+	let x = TILE_SIZE * 1
+	let y = TILE_SIZE * (BOARD_NY - BOARD_HIDDEN_NY)
+
+	let w = TILE_SIZE * 3
+	let h = TILE_SIZE * 2
+
+	fill(0)
+	stroke(255)
+	rect(x, y, w, h)
+
+	stroke(255)
+	fill(255)
+	textSize(TILE_SIZE * 0.75)
+	text(textAlign(RIGHT))
+	text('LEVEL', x + w, y - TILE_SIZE / 2)
 }
