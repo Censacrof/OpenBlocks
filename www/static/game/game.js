@@ -176,7 +176,7 @@ let PREV_STATE = "begin"
 let CURR_STATE = "begin"
 let NEXT_STATE = "begin"
 
-let nextBlockIndex = -1
+let swappedHoldPieceIndex = -1
 let fallingPiece = null
 
 let holdPieceIndex = -1
@@ -287,9 +287,7 @@ function controlPiece() {
 
 	let skipState = false
 	if ((keyIsDown(16) || keyIsDown(67)) && canHold) { // Shift, C -> hold
-		if (fallingPiece.type == "I")
-
-		nextBlockIndex = holdPieceIndex
+		swappedHoldPieceIndex = holdPieceIndex
 		holdPieceIndex = fallingPiece.index
 		canHold = false
 		skipState = true
@@ -346,7 +344,7 @@ function update() {
 	switch (CURR_STATE) {
 		case "begin": {
 			holdPieceIndex = -1
-			nextBlockIndex = -1
+			swappedHoldPieceIndex = -1
 			canHold = true
 			RNG_BAG = []
 			NEXT_STATE = "newPiece"
@@ -354,9 +352,9 @@ function update() {
 		}
 
 		case "newPiece": {
-			if (nextBlockIndex >= 0) {
-				fallingPiece = newFallingPiece(nextBlockIndex)
-				nextBlockIndex = -1
+			if (swappedHoldPieceIndex >= 0) {
+				fallingPiece = newFallingPiece(swappedHoldPieceIndex)
+				swappedHoldPieceIndex = -1
 			}
 			else 
 				fallingPiece = RNGGetPiece()
