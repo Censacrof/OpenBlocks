@@ -294,6 +294,27 @@ function controlPiece() {
 		NEXT_STATE = "newPiece"
 	}
 
+	if (keyIsDown(32)) { // Space -> hard drop
+		if (canHardDrop) {
+			let yOffset
+			for (yOffset = 0; yOffset < BOARD_NY; yOffset++) {
+				ghostBlocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, yOffset)))
+
+				if (!canPieceMoveDown(ghostBlocks))
+					break
+			}
+
+			fallingPiece.blocks = fallingPiece.blocks.map(i => p5.Vector.add(i, createVector(0, yOffset)))
+			instantLock = true
+			canHardDrop = false
+
+			skipState = true
+			NEXT_STATE = "locking"
+		}
+	}
+	else
+		canHardDrop = true		
+
 	return skipState
 }
 
@@ -333,8 +354,12 @@ function RNGGetPiece() {
 	return newFallingPiece(index)
 }
 
+let canHardDrop = true
+
 let STARTING_FALL_TIMER = 250
 let fallTimer = new Timer(STARTING_FALL_TIMER)
+
+let instantLock = false
 
 let lockTimer = new Timer(500)
 function update() {
@@ -346,6 +371,8 @@ function update() {
 			holdPieceIndex = -1
 			swappedHoldPieceIndex = -1
 			canHold = true
+			canHardDrop = true
+			instantLock = false
 			RNG_BAG = []
 			NEXT_STATE = "newPiece"
 			break
@@ -383,22 +410,28 @@ function update() {
 		}
 
 		case "locking": {
-			if (controlPiece())
+			if (!instantLock)
+			{
+				if (controlPiece())
 				break
 
-			if (canPieceMoveDown(fallingPiece.blocks)) {
-				NEXT_STATE = "fallPiece"
-				break
+				if (canPieceMoveDown(fallingPiece.blocks)) {
+					NEXT_STATE = "fallPiece"
+					break
+				}
+
+				if (!lockTimer.isExpired)
+					break
 			}
-
-			if (!lockTimer.isExpired)
-				break
 
 			// lock the piece
 			for (let i = 0; i < fallingPiece.blocks.length; i++) {
 				let b = fallingPiece.blocks[i]
 				board[b.y][b.x] = newBlock(true, true, fallingPiece.color)
 			}
+
+			// reset instantLock
+			instantLock = false
 
 			// reset canHold
 			canHold = true
